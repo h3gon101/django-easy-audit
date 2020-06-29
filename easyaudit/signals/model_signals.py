@@ -60,7 +60,11 @@ def pre_save(sender, instance, raw, using, update_fields, **kwargs):
                 return None
 
             if instance.pk is None:
-                created = True
+                try:
+                    sender.objects.get(pk=instance.pk)
+                    created = True
+                except sender.DoesNotExist:
+                    created = False
             else:
                 created = False
 
