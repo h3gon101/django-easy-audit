@@ -60,22 +60,22 @@ def pre_save(sender, instance, raw, using, update_fields, **kwargs):
                 return None
 
             if instance.pk is None:
-                try:
-                    sender.objects.get(pk=instance.pk)
-                    created = True
-                except sender.DoesNotExist:
-                    created = False
+                created = True
             else:
                 created = False
 
             # created or updated?
             if not created:
-                old_model = sender.objects.get(pk=instance.pk)
-                delta = model_delta(old_model, instance)
-                if not delta:
-                    return False
-                changed_fields = json.dumps(delta)
-                event_type = CRUDEvent.UPDATE
+                old_model = sender.objects.filter(pk=instance.pk)
+                if old_model.exists():
+                    old_model = old_model.first()
+                    delta = model_delta(old_model, instance)
+                    if not delta:
+                        return False
+                    changed_fields = json.dumps(delta)
+                    event_type = CRUDEvent.UPDATE
+                else:
+                    created = True
 
             # user
             try:
